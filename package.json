@@ -1,0 +1,17 @@
+{
+  "name": "osu-completionist",
+  "version": "1.0.0",
+  "description": "A live completionist tracker and leaderboard for osu! players.",
+  "main": "server.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "Kayla Kersting (kaysting@github)",
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "express": "^5.1.0",
+    "osu-api-v2-js": "^2.1.5",
+    "osu.js": "^2.0.3"
+  }
+}
