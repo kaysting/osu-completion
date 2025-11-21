@@ -1,0 +1,1 @@
+sqlite3 storage.db .schema > schema.sql
