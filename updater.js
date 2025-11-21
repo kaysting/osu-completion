@@ -222,17 +222,18 @@ const updateUserAllPasses = async (userId) => {
             });
             transaction(maps);
             await new Promise(resolve => setTimeout(resolve, 1500));
+            // Get counts
+            const passCount = db.prepare(
+                `SELECT COUNT(*) AS count
+                    FROM user_passes
+                    WHERE user_id = ?`
+            ).get(userId).count;
+            log(`Now storing ${passCount} map passes for ${user.username}`);
         }
     } catch (error) {
         log('Error while updating user with full pass history:', error);
     }
-    // Get counts
-    const passCount = db.prepare(
-        `SELECT COUNT(*) AS count
-                    FROM user_passes
-                    WHERE user_id = ?`
-    ).get(user.id).count;
-    log(`Now storing ${passCount} map passes for ${user.username}`);
+    isAllPassesUpdateRunning = false;
 };
 
 const updateUserRecents = async (userId) => {
@@ -303,9 +304,17 @@ const updateUserRecents = async (userId) => {
             log(`Completed recent score update for ${user.username}`);
         });
         transaction(scores);
+        // Get counts
+        const passCount = db.prepare(
+            `SELECT COUNT(*) AS count
+                    FROM user_passes
+                    WHERE user_id = ?`
+        ).get(userId).count;
+        log(`Now storing ${passCount} map passes for ${user.username}`);
     } catch (error) {
         log('Error while updating user recent scores:', error);
     }
+    isRecentsUpdateRunning = false;
 };
 
 // Function that initializes scheduled user update tasks
@@ -313,14 +322,19 @@ const updateUserRecents = async (userId) => {
 // only update using their recent scores. Otherwise, scrape their
 // whole map pass history.
 const updateUsers = async () => {
-    const tasks = db.prepare(`SELECT * FROM user_update_tasks ORDER BY time_queued ASC`).all();
-    for (const task of tasks) {
-        const msSinceLastUpdate = Date.now() - userEntry.last_score_update;
-        if (msSinceLastUpdate < 1000 * 60 * 60 * 24) {
-            await updateUserRecents(task.user_id);
-        } else {
-            await updateUserAllPasses(task.user_id);
+    try {
+        const tasks = db.prepare(`SELECT * FROM user_update_tasks ORDER BY time_queued ASC`).all();
+        for (const task of tasks) {
+            const userEntry = db.prepare(`SELECT * FROM users WHERE id = ?`).get(task.user_id);
+            const msSinceLastUpdate = Date.now() - (userEntry?.last_score_update || 0);
+            if (msSinceLastUpdate < 1000 * 60 * 60 * 24) {
+                updateUserRecents(task.user_id);
+            } else {
+                updateUserAllPasses(task.user_id);
+            }
         }
+    } catch (error) {
+        log('Error while initializing user update tasks:', error);
     }
     setTimeout(updateUsers, 1000);
 };
