@@ -57,7 +57,7 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-    log('ERROR', err);
+    log(err);
     res.status(500);
     res.render('layout', {
         title: `500 Internal Server Error`,
@@ -69,4 +69,34 @@ app.use((err, req, res, next) => {
 
 app.listen(config.webserver_port, () => {
     console.log(`Server is running on port ${config.webserver_port}`);
+});
+
+let shuttingDown = false;
+
+process.on('unhandledRejection', (reason, promise) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    log('Unhandled Rejection at:', promise, 'reason:', reason);
+    db.close();
+});
+
+process.on('uncaughtException', (err) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    log('Uncaught Exception:', err);
+    db.close();
+});
+
+process.on('SIGINT', () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    log('Received SIGINT');
+    db.close();
+});
+
+process.on('SIGTERM', () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    log('Received SIGTERM');
+    db.close();
 });

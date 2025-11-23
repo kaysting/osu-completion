@@ -419,4 +419,4 @@ const queueUsers = (init = false) => {
 log(`Starting update processes...`);
 fetchNewMaps();
 updateUsers();
-queueUsers(true);
+queueUsers();
