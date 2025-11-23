@@ -10,8 +10,9 @@
   "type": "commonjs",
   "dependencies": {
     "better-sqlite3": "^12.4.1",
+    "ejs": "^3.1.10",
     "express": "^5.1.0",
     "osu-api-v2-js": "^2.1.5",
-    "osu.js": "^2.0.3"
+    "osu.js": "^2.0.0"
   }
 }
