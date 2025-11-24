@@ -249,6 +249,23 @@ a:hover {
     padding-right: 8px;
 }
 
+@media (max-width: 550px) {
+    /* move stats to their own line */
+
+    #leaderboard .entry .profile {
+        flex-wrap: wrap;
+    }
+
+    #leaderboard .entry .content {
+        height: auto;
+        padding: 8px;
+    }
+
+    #leaderboard .entry .stats {
+        width: 100%;
+    }
+}
+
 #leaderboard .entry .rank {
     min-width: 32px;
     font-size: 14px;
@@ -303,8 +320,17 @@ a:hover {
 
 #leaderboard .settings .section .label {
     color: white;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+#leaderboard .settings .section .label ::before {
+    width: 3px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 2px;
 }
 
 #leaderboard .pages {

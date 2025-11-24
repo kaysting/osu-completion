@@ -48,17 +48,17 @@ app.get('/leaderboard/:mode', (req, res) => {
          WHERE us.mode = ? AND us.includes_loved = ? AND us.includes_converts = ?
          ORDER BY us.count DESC
          LIMIT ? OFFSET ?`
-    ).all(mode, includeLoved ? 1 : 0, includeConverts ? 1 : 0, limit, offset);
+    ).all(mode == 'catch' ? 'fruits' : mode, includeLoved ? 1 : 0, includeConverts ? 1 : 0, limit, offset);
     // Get total number of beatmaps
     const totalMapCount = db.prepare(
         `SELECT count FROM beatmap_stats
          WHERE mode = ? AND includes_loved = ? AND includes_converts = ?`
-    ).get(mode, includeLoved ? 1 : 0, includeConverts ? 1 : 0).count;
+    ).get(mode == 'catch' ? 'fruits' : mode, includeLoved ? 1 : 0, includeConverts ? 1 : 0).count;
     // Get total number of players
     const totalPlayers = db.prepare(
         `SELECT COUNT(*) AS total FROM user_stats
          WHERE mode = ? AND includes_loved = ? AND includes_converts = ? AND count > 0`
-    ).get(mode, includeLoved ? 1 : 0, includeConverts ? 1 : 0).total;
+    ).get(mode == 'catch' ? 'fruits' : mode, includeLoved ? 1 : 0, includeConverts ? 1 : 0).total;
     // Calculate last page
     const lastPage = Math.ceil(totalPlayers / limit);
     // Compile data
@@ -72,8 +72,16 @@ app.get('/leaderboard/:mode', (req, res) => {
         percentage: totalMapCount > 0 ? ((entry.count / totalMapCount) * 100).toFixed(2) : '0.00'
     }));
     // Render
+    const caseKey = `${includeLoved.toString()}_${includeConverts.toString()}`;
+    const text = {
+        true_true: 'all ranked, loved, and convert maps',
+        true_false: 'all ranked and loved maps, without converts',
+        false_true: 'ranked maps only, along with their converts',
+        false_false: 'ranked maps only'
+    }[caseKey];
     res.render('layout', {
-        title: 'Leaderboard',
+        title: `osu!${mode != 'osu' ? `${mode}` : ''} completionist leaderboard`,
+        description: `View the players who have passed the most osu!${mode != 'osu' ? `${mode}` : ''} beatmaps! This leaderboard tracks passes on ${text}.`,
         page: 'leaderboard',
         settings: {
             mode, page, lastPage, includeConverts, includeLoved
