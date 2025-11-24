@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+@font-face {
+    font-family: 'Torus';
+    src: url('/fonts/torus/Torus-Thin.otf') format('opentype');
+    font-weight: 100;
+}
+
+@font-face {
+    font-family: 'Torus';
+    src: url('/fonts/torus/Torus-Light.otf') format('opentype');
+    font-weight: 200;
+}
+
+@font-face {
+    font-family: 'Torus';
+    src: url('/fonts/torus/Torus-Regular.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Torus';
+    src: url('/fonts/torus/Torus-SemiBold.otf') format('opentype');
+    font-weight: 600;
+}
+
+@font-face {
+    font-family: 'Torus';
+    src: url('/fonts/torus/Torus-Bold.otf') format('opentype');
+    font-weight: 700;
+}
+
+@font-face {
+    font-family: 'Torus';
+    src: url('/fonts/torus/Torus-Heavy.otf') format('opentype');
+    font-weight: 800;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+body {
+    --bg: hsl(220, 20%, 10%);
+    --bgCard: hsl(220, 20%, 15%);
+    --text: hsl(220, 20%, 95%);
+    --textDim: hsl(220, 20%, 65%);
+    --accent: hsl(150, 90%, 60%);
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1;
+}
+
+p {
+    font-size: 15px;
+    line-height: 1.4;
+    margin-bottom: 0.5em;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+#topbar {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    height: 54px;
+    padding: 0px 20px;
+    border-bottom: 1px solid hsl(220, 20%, 20%);
+    background: var(--bgCard);
+}
+
+#topbar .container {
+    height: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+#logo {
+    font-family: 'Torus', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 1;
+    user-select: none;
+    margin-top: -2px;
+}
+
+#logo .white {
+    color: white;
+}
+
+#logo .green {
+    color: var(--accent);
+}
+
+#topbar .buttons {
+    display: flex;
+    gap: 8px;
+}
+
+#topbar .buttons a {
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--textDim);
+    font-family: 'Torus', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    transition: 0.1s ease-in-out;
+}
+
+#topbar .buttons a:hover {
+    background: hsl(220, 20%, 20%);
+    color: var(--text);
+    transition: none;
+}
+
+#main {
+    max-width: 1000px;
+    margin: 0 auto;
+    margin-top: calc(54px + 16px);
+    padding: 0px 10px 20px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.card {
+    background: var(--bgCard);
+    border-radius: 8px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+    padding: 8px;
+}
+
+#footer * {
+    color: hsl(220, 20%, 40%);
+    font-size: 13px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+#footer a {
+    text-decoration: underline;
+}

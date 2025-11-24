@@ -58,3 +58,11 @@ CREATE TABLE IF NOT EXISTS "user_passes" (
 	"time_passed"	INTEGER NOT NULL DEFAULT 1763938577564,
 	PRIMARY KEY("user_id","mapset_id","map_id")
 );
+CREATE INDEX idx_users_last_update ON users(last_score_update);
+CREATE INDEX idx_users_name ON users(name);
+CREATE INDEX idx_user_passes_lookup ON user_passes(user_id, map_id, mode);
+CREATE INDEX idx_user_passes_stats ON user_passes(user_id, mode, status, is_convert);
+CREATE INDEX idx_user_passes_recent ON user_passes(user_id, mode, time_passed DESC);
+CREATE INDEX idx_user_stats_leaderboard ON user_stats(mode, includes_loved, includes_converts, count DESC);
+CREATE INDEX idx_beatmaps_stats ON beatmaps(mode, status, is_convert);
+CREATE INDEX idx_tasks_queued ON user_update_tasks(time_queued);
