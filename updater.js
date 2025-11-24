@@ -251,8 +251,8 @@ const updateUserAllPasses = async (userId) => {
                     const isRanked = ['ranked', 'loved', 'approved'].includes(map.status);
                     if (existingPass || !isRanked) continue;
                     // Save the pass
-                    db.prepare(`INSERT OR IGNORE INTO user_passes (user_id, mapset_id, map_id, mode, status, is_convert) VALUES (?, ?, ?, ?, ?, ?)`).run(
-                        user.id, map.beatmapset_id, map.id, map.mode, map.status, map.convert ? 1 : 0
+                    db.prepare(`INSERT OR IGNORE INTO user_passes (user_id, mapset_id, map_id, mode, status, is_convert, time_passed) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(
+                        user.id, map.beatmapset_id, map.id, map.mode, map.status, map.convert ? 1 : 0, Date.now()
                     );
                     newCount++;
                 }
@@ -345,8 +345,15 @@ const updateUserRecents = async (userId) => {
         // Write new scores to database
         const transaction = db.transaction((scores) => {
             for (const score of scores) {
-                db.prepare(`INSERT OR IGNORE INTO user_passes (user_id, mapset_id, map_id, mode, status, is_convert) VALUES (?, ?, ?, ?, ?, ?)`).run(
-                    user.id, score.beatmapset.id, score.beatmap.id, score.beatmap.mode, score.beatmap.status, score.beatmap.convert ? 1 : 0
+                db.prepare(
+                    `INSERT OR IGNORE INTO user_passes
+                        (user_id, mapset_id, map_id, mode, status, is_convert, time_passed)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`
+                ).run(
+                    user.id, score.beatmapset.id, score.beatmap.id,
+                    score.beatmap.mode, score.beatmap.status,
+                    score.beatmap.convert ? 1 : 0,
+                    score.ended_at?.getTime() || Date.now()
                 );
             }
             db.prepare(`UPDATE users SET last_score_update = ? WHERE id = ?`).run(updateTime, user.id);

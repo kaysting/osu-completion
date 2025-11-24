@@ -112,6 +112,7 @@ async function main() {
         const user = db.prepare(`SELECT * FROM users WHERE name = ? OR id = ?`).get(inputUser, inputUser);
         if (!user) {
             console.error('User not found in the database.');
+            db.close();
             process.exit(1);
         }
 
@@ -124,6 +125,21 @@ async function main() {
             `SELECT count FROM user_stats
          WHERE mode = ? AND includes_loved = ? AND includes_converts = ? AND user_id = ?`
         ).get(mode, includeLoved ? 1 : 0, includeConverts ? 1 : 0, user.id).count;
+
+        // Get recent passes
+        const recentPasses = db.prepare(
+            `SELECT up.time_passed, bs.title, bs.artist, bm.mode, bm.name, bm.stars
+             FROM user_passes up
+             JOIN beatmaps bm ON up.map_id = bm.id
+             JOIN beatmapsets bs ON up.mapset_id = bs.id
+             WHERE up.user_id = ?
+               AND up.mode = ?
+               AND bm.mode = up.mode
+               AND ${includeLoved ? `up.status IN ('ranked', 'approved', 'loved')` : `up.status IN ('ranked', 'approved')`}
+               ${includeConverts ? '' : 'AND up.is_convert = 0'}
+             ORDER BY up.time_passed DESC
+             LIMIT 10`
+        ).all(user.id, mode);
 
         // Get user rank
         const totalUsers = db.prepare(
@@ -144,6 +160,13 @@ async function main() {
         const percentage = totalCount > 0 ? ((completedCount / totalCount) * 100).toFixed(2) : '0.00';
         console.log(`Percent complete: ${percentage}%\n`);
         console.log(`Rank: #${rank} (of ${totalUsers} players)\n`);
+
+        // Display recent passes
+        console.log('Recent passes:');
+        for (const pass of recentPasses) {
+            console.log(`[${new Date(pass.time_passed).toISOString()}] [${pass.mode} ${pass.stars.toFixed(2)}⭐] ${pass.artist} - ${pass.title} [${pass.name}]`);
+        }
+        console.log();
 
     } else {
 
