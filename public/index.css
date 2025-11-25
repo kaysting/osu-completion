@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:wght@300');
 
 @font-face {
     font-family: 'Torus';
@@ -70,6 +71,77 @@ a:hover {
     text-decoration: underline;
 }
 
+.btn {
+    --bg: hsl(220, 20%, 25%);
+    --bgHover: hsl(220, 20%, 35%);
+    --fg: hsl(220, 20%, 85%);
+    --fgHover: white;
+    height: 32px;
+    padding: 0px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    background: var(--bg);
+    transition: 0.1s ease-in-out;
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn.primary {
+    --bg: hsl(150, 90%, 60%);
+    --bgHover: hsl(150, 90%, 75%);
+    --fg: hsl(220, 20%, 10%);
+    --fgHover: hsl(220, 20%, 5%);
+}
+
+.btn.text {
+    --bg: transparent;
+    --bgHover: hsl(220, 20%, 25%);
+    --fg: hsl(220, 20%, 80%);
+    --fgHover: white;
+}
+
+.btn.text.bright {
+    --fg: white;
+}
+
+.btn.text.muted {
+    --fg: hsl(220, 20%, 60%);
+}
+
+.btn.text.accent {
+    --fg: var(--accent);
+}
+
+.btn:hover {
+    color: var(--fgHover);
+    background: var(--bgHover);
+    transition: none;
+    text-decoration: none;
+}
+
+.btnGroup {
+    display: flex;
+    gap: 2px;
+}
+
+.btnGroup .btn {
+    border-radius: 2px;
+}
+
+.btnGroup .btn:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.btnGroup .btn:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
 #topbar {
     position: fixed;
     top: 0px;
@@ -119,24 +191,6 @@ a:hover {
 #topbar .buttons {
     display: flex;
     gap: 8px;
-}
-
-#topbar .buttons a {
-    text-decoration: none;
-    padding: 8px 12px;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--textDim);
-    font-family: 'Torus', sans-serif;
-    font-weight: 600;
-    font-size: 14px;
-    transition: 0.1s ease-in-out;
-}
-
-#topbar .buttons a:hover {
-    background: hsl(220, 20%, 20%);
-    color: var(--text);
-    transition: none;
 }
 
 #main {
@@ -197,7 +251,7 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding-bottom: 16px;
+    padding: 16px 8px;
 }
 
 #leaderboard .entries {
@@ -307,8 +361,14 @@ a:hover {
 
 #leaderboard .settings {
     display: flex;
-    gap: 16px 24px;
+    gap: 8px;
     flex-wrap: wrap;
+    justify-content: center;
+}
+
+#leaderboard .settings .card {
+    display: flex;
+    gap: 12px;
     padding: 12px 16px;
 }
 
@@ -335,7 +395,7 @@ a:hover {
 
 #leaderboard .pages {
     display: flex;
-    gap: 8px;
+    gap: 4px;
     justify-content: center;
 }
 
@@ -344,59 +404,4 @@ a:hover {
     display: flex;
     align-items: center;
     color: var(--textDim);
-}
-
-.btn {
-    --bg: hsl(220, 20%, 25%);
-    --bgHover: hsl(220, 20%, 35%);
-    --fg: hsl(220, 20%, 85%);
-    height: 32px;
-    padding: 0px 12px;
-    font-size: 14px;
-    font-weight: 600;
-    border-radius: 8px;
-    background: var(--bg);
-    transition: 0.1s ease-in-out;
-    color: var(--fg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-
-.btn.primary {
-    --bg: hsl(150, 90%, 50%);
-    --bgHover: hsl(150, 90%, 65%);
-    --fg: hsl(220, 20%, 10%);
-}
-
-.btn.text {
-    --bg: transparent;
-    --bgHover: hsl(220, 20%, 25%);
-    --fg: hsl(220, 20%, 80%);
-}
-
-.btn:hover {
-    background: var(--bgHover);
-    transition: none;
-    text-decoration: none;
-}
-
-.btnGroup {
-    display: flex;
-    gap: 2px;
-}
-
-.btnGroup .btn {
-    border-radius: 2px;
-}
-
-.btnGroup .btn:first-child {
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-}
-
-.btnGroup .btn:last-child {
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
 }

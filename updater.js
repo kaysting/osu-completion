@@ -44,44 +44,9 @@ const updateBeatmapStats = () => {
     }
 };
 
-// Function to update user stats and totals in the database
-const updateUserStats = async (userId) => {
-    try {
-        const userEntry = db.prepare(`SELECT * FROM users WHERE id = ?`).get(userId);
-        for (const mode of ['osu', 'taiko', 'fruits', 'mania']) {
-            for (const includesLoved of [1, 0]) {
-                for (const includesConverts of [1, 0]) {
-                    const where = [];
-                    where.push(`user_id = ${userId}`);
-                    where.push(`mode = '${mode}'`);
-                    if (includesLoved) {
-                        where.push(`status IN ('ranked', 'approved', 'loved')`);
-                    } else {
-                        where.push(`status IN ('ranked', 'approved')`);
-                    }
-                    if (!includesConverts) {
-                        where.push(`is_convert = 0`);
-                    }
-                    const count = db.prepare(
-                        `SELECT COUNT(*) AS count
-                                FROM user_passes
-                                WHERE ${where.join(' AND ')}`
-                    ).get().count;
-                    db.prepare(`INSERT OR REPLACE INTO user_stats (user_id, mode, includes_loved, includes_converts, count) VALUES (?, ?, ?, ?, ?)`).run(
-                        userId, mode, includesLoved, includesConverts, count
-                    );
-                }
-            }
-        }
-        log('Updated user stats for', userEntry?.name || userId);
-    } catch (error) {
-        log('Error while updating user stats:', error);
-    }
-};
-
 // Function to fetch new beatmaps(ets)
 const FETCH_ALL_MAPS = false;
-const fetchNewMaps = async () => {
+const updateSavedMaps = async () => {
     try {
         // Initialize API
         const osu = await osuApi.API.createAsync(config.osu_client_id, config.osu_api_token);
@@ -154,9 +119,56 @@ const fetchNewMaps = async () => {
         log('Error while updating stored beatmap data:', error);
     }
     // Wait an hour and then run again
-    setTimeout(fetchNewMaps, 1000 * 60 * 60);
+    setTimeout(updateSavedMaps, 1000 * 60 * 60);
 };
 
+const logUserPassCount = (userId) => {
+    const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(userId);
+    const passCount = db.prepare(
+        `SELECT COUNT(*) AS count
+                     FROM user_passes
+                     WHERE user_id = ?`
+    ).get(user.id).count;
+    log(`Now storing ${passCount} map passes for ${user.name}`);
+};
+
+// Function to update user stats and totals in the database
+const updateUserStats = async (userId) => {
+    try {
+        const userEntry = db.prepare(`SELECT * FROM users WHERE id = ?`).get(userId);
+        for (const mode of ['osu', 'taiko', 'fruits', 'mania']) {
+            for (const includesLoved of [1, 0]) {
+                for (const includesConverts of [1, 0]) {
+                    const where = [];
+                    where.push(`user_id = ${userId}`);
+                    where.push(`mode = '${mode}'`);
+                    if (includesLoved) {
+                        where.push(`status IN ('ranked', 'approved', 'loved')`);
+                    } else {
+                        where.push(`status IN ('ranked', 'approved')`);
+                    }
+                    if (!includesConverts) {
+                        where.push(`is_convert = 0`);
+                    }
+                    const count = db.prepare(
+                        `SELECT COUNT(*) AS count
+                                FROM user_passes
+                                WHERE ${where.join(' AND ')}`
+                    ).get().count;
+                    db.prepare(`INSERT OR REPLACE INTO user_stats (user_id, mode, includes_loved, includes_converts, count) VALUES (?, ?, ?, ?, ?)`).run(
+                        userId, mode, includesLoved, includesConverts, count
+                    );
+                }
+            }
+        }
+        log('Updated user stats for', userEntry?.name || userId);
+    } catch (error) {
+        log('Error while updating user stats:', error);
+    }
+};
+
+// Function to fetch a user's profile and update their stored data
+// Returns the fetched user data
 const updateUserProfile = async (userId) => {
     try {
         const osu = await getOsuApiInstance();
@@ -190,7 +202,9 @@ const updateUserProfile = async (userId) => {
 let isAllPassesUpdateRunning = false;
 let isRecentsUpdateRunning = false;
 
-const updateUserAllPasses = async (userId) => {
+// Function to update a user's completion data by sequentially fetching
+// their passes for all maps
+const updateUserFromAllPasses = async (userId) => {
     try {
         if (isAllPassesUpdateRunning) {
             return;
@@ -269,13 +283,8 @@ const updateUserAllPasses = async (userId) => {
             });
             transaction(maps);
             await new Promise(resolve => setTimeout(resolve, 1500));
-            // Get counts
-            const passCount = db.prepare(
-                `SELECT COUNT(*) AS count
-                    FROM user_passes
-                    WHERE user_id = ?`
-            ).get(userId).count;
-            log(`Now storing ${passCount} map passes for ${user.username}`);
+            // Log pass count
+            logUserPassCount(userId);
         }
         // Update user stats
         await updateUserStats(userId);
@@ -285,7 +294,10 @@ const updateUserAllPasses = async (userId) => {
     isAllPassesUpdateRunning = false;
 };
 
-const updateUserRecents = async (userId) => {
+// Function to update a user's completion data by fetching
+// their recent scores only. This is only reliable if their recents were
+// fetched less than 24 hours ago
+const updateUserFromRecents = async (userId) => {
     try {
         if (isRecentsUpdateRunning) {
             return;
@@ -361,13 +373,8 @@ const updateUserRecents = async (userId) => {
             log(`Completed recent score update for ${user.username}`);
         });
         transaction(scores);
-        // Get counts
-        const passCount = db.prepare(
-            `SELECT COUNT(*) AS count
-                    FROM user_passes
-                    WHERE user_id = ?`
-        ).get(userId).count;
-        log(`Now storing ${passCount} map passes for ${user.username}`);
+        // Log counts
+        logUserPassCount(userId);
         // Update user stats
         await updateUserStats(userId);
     } catch (error) {
@@ -376,7 +383,69 @@ const updateUserRecents = async (userId) => {
     isRecentsUpdateRunning = false;
 };
 
-// Function that initializes scheduled user update tasks
+// Function to get scores set recently globally and save new passes
+// from users who we are tracking
+const globalRecentCursors = {
+    osu: null,
+    taiko: null,
+    fruits: null,
+    mania: null
+};
+const updateUsersFromGlobalRecents = async () => {
+    try {
+        const osu = await getOsuApiInstance();
+        // Loop for each game mode
+        for (const ruleset of ['osu', 'taiko', 'fruits', 'mania']) {
+            // Fetch global recent scores
+            const cursor = globalRecentCursors[ruleset];
+            const res = await osu.getScores({ ruleset, cursor });
+            globalRecentCursors[ruleset] = res.cursor;
+            // If no cursor (first fetch), don't process scores
+            if (!cursor) continue;
+            // Loop through scores
+            for (const score of res.scores) {
+                // Skip failed scores
+                if (!score.passed) continue;
+                // Get user from db and skip if not found
+                const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(score.user_id);
+                if (!user) continue;
+                // Get map and diff info from db and skip if not found
+                const map = db.prepare(
+                    `SELECT diff.status
+                 FROM beatmaps diff
+                 JOIN beatmapsets mapset ON diff.mapset_id = mapset.id
+                 WHERE diff.id = ? AND diff.mode = ?`
+                ).get(score.beatmap_id, ruleset);
+                if (!map) continue;
+                // Skip if map is unranked
+                const isRanked = ['ranked', 'loved', 'approved'].includes(map.status);
+                if (!isRanked) continue;
+                // Check for existing pass and skip if found
+                const existingPass = db.prepare(`SELECT 1 FROM user_passes WHERE user_id = ? AND map_id = ? AND mode = ? LIMIT 1`).get(
+                    user.id, score.beatmap_id, ruleset
+                );
+                if (existingPass) continue;
+                // Save the pass and log
+                db.prepare(`INSERT OR IGNORE INTO user_passes (user_id, mapset_id, map_id, mode, status, is_convert, time_passed) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(
+                    user.id, map.beatmapset_id, score.beatmap_id, ruleset, map.status, map.convert ? 1 : 0, Date.now()
+                );
+                log(`Found and saved a new ${ruleset} map pass for ${user.name}`);
+                // Log counts
+                logUserPassCount(user.id);
+                // Update user stats
+                await updateUserStats(user.id);
+            }
+            // Wait a second for rate limiting
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    } catch (error) {
+        log('Error while updating users from global recents:', error);
+    }
+    // Wait and check again
+    setTimeout(updateUsersFromGlobalRecents, 1000 * 10);
+};
+
+// Function that starts scheduled user update tasks
 // If it's been less than 24 hours since last user pass update,
 // only update using their recent scores. Otherwise, scrape their
 // whole map pass history.
@@ -387,9 +456,9 @@ const updateUsers = async () => {
             const userEntry = db.prepare(`SELECT * FROM users WHERE id = ?`).get(task.user_id);
             const msSinceLastUpdate = Date.now() - (userEntry?.last_score_update || 0);
             if (msSinceLastUpdate < 1000 * 60 * 60 * 24) {
-                updateUserRecents(task.user_id);
+                updateUserFromRecents(task.user_id);
             } else {
-                updateUserAllPasses(task.user_id);
+                updateUserFromAllPasses(task.user_id);
             }
         }
     } catch (error) {
@@ -424,6 +493,7 @@ const queueUsers = (init = false) => {
 
 // Start update processes
 log(`Starting update processes...`);
-fetchNewMaps();
+updateSavedMaps();
 updateUsers();
 queueUsers();
+updateUsersFromGlobalRecents();

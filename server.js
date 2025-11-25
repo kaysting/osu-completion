@@ -57,7 +57,7 @@ app.get('/leaderboard/:mode', (req, res) => {
     // Get total number of players
     const totalPlayers = db.prepare(
         `SELECT COUNT(*) AS total FROM user_stats
-         WHERE mode = ? AND includes_loved = ? AND includes_converts = ? AND count > 0`
+         WHERE mode = ? AND includes_loved = ? AND includes_converts = ?`
     ).get(mode == 'catch' ? 'fruits' : mode, includeLoved ? 1 : 0, includeConverts ? 1 : 0).total;
     // Calculate last page
     const lastPage = Math.ceil(totalPlayers / limit);
@@ -72,16 +72,15 @@ app.get('/leaderboard/:mode', (req, res) => {
         percentage: totalMapCount > 0 ? ((entry.count / totalMapCount) * 100).toFixed(2) : '0.00'
     }));
     // Render
-    const caseKey = `${includeLoved.toString()}_${includeConverts.toString()}`;
-    const text = {
+    const includedText = {
         true_true: 'all ranked, loved, and convert maps',
         true_false: 'all ranked and loved maps, without converts',
         false_true: 'ranked maps only, along with their converts',
         false_false: 'ranked maps only'
-    }[caseKey];
+    }[`${includeLoved.toString()}_${includeConverts.toString()}`];
     res.render('layout', {
         title: `osu!${mode != 'osu' ? `${mode}` : ''} completionist leaderboard`,
-        description: `View the players who have passed the most osu!${mode != 'osu' ? `${mode}` : ''} beatmaps! This leaderboard tracks passes on ${text}.`,
+        description: `View the players who have passed the most osu!${mode != 'osu' ? `${mode}` : ''} beatmaps! This leaderboard tracks passes on ${includedText}.`,
         page: 'leaderboard',
         settings: {
             mode, page, lastPage, includeConverts, includeLoved
