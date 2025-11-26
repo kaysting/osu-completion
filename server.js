@@ -19,9 +19,6 @@ app.use(express.static('public'));
 
 app.get('/', (req, res) => {
     return res.redirect(`/leaderboard`);
-    res.render('layout', {
-        page: 'home'
-    });
 });
 
 app.get('/leaderboard', (req, res) => {
@@ -94,25 +91,43 @@ app.get('/leaderboard/:mode/:includes', (req, res) => {
     });
 });
 
-app.get('/users/:id', (req, res) => {
+const ensureUserExists = (req, res, next) => {
     const userId = req.params.id;
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    if (!user) {
+        return res.status(404).render('layout', {
+            title: 'User not found',
+            page: 'error',
+            number: 404,
+            message: `We aren't tracking the user with ID ${userId} yet. If you want to see their completion stats, have them visit this site and log in with osu!.`
+        });
+    }
+    req.user = user;
+    next();
+};
+
+app.get('/search', (req, res) => {
     res.render('layout', {
-        title: userId,
-        page: 'profile',
-        userId: userId
+        title: 'Search completionists',
+        page: 'search'
     });
 });
 
-app.get('/queue', (req, res) => {
-    res.render('layout', {
-        title: `Update queue`,
-        page: 'queue'
-    });
+app.get('/u/:id', ensureUserExists, (req, res) => {
+
+});
+
+app.get('/u/:id/:mode', ensureUserExists, (req, res) => {
+
+});
+
+app.get('/u/:id/:mode/:includes', ensureUserExists, (req, res) => {
+
 });
 
 app.use((req, res) => {
     res.status(404).render('layout', {
-        title: '404 Not Found',
+        title: '404 not found',
         page: 'error',
         number: 404,
         message: `The page you requested couldn't be found.`
@@ -123,7 +138,7 @@ app.use((err, req, res, next) => {
     log(err);
     res.status(500);
     res.render('layout', {
-        title: `500 Internal Server Error`,
+        title: `500 internal server error`,
         page: 'error',
         number: 500,
         message: `An internal server error occurred. Please try again later.`

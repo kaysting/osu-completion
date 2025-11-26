@@ -57,7 +57,7 @@ body {
 }
 
 p {
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.4;
     margin-bottom: 0.5em;
 }
@@ -69,6 +69,11 @@ a {
 
 a:hover {
     text-decoration: underline;
+}
+
+b {
+    font-weight: 600;
+    color: white;
 }
 
 .btn {
@@ -236,8 +241,9 @@ a:hover {
 }
 
 #error {
+    max-width: 600px;
     text-align: center;
-    margin: 30px 0px;
+    margin: 30px auto;
 }
 
 #error h1 {
