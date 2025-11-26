@@ -1,6 +1,6 @@
+require('dotenv').config();
 const db = require('./db');
 const osuApi = require('osu-api-v2-js');
-const config = require('./config.json');
 
 const log = (...args) => {
     const timestamp = new Date().toISOString();
@@ -8,7 +8,7 @@ const log = (...args) => {
 };
 
 const getOsuApiInstance = async () => {
-    return await osuApi.API.createAsync(config.osu_client_id, config.osu_api_token);
+    return await osuApi.API.createAsync(process.env.OSU_CLIENT_ID, process.env.OSU_API_TOKEN);
 };
 
 // Function to update beatmap stats and totals in the database
@@ -49,7 +49,7 @@ const FETCH_ALL_MAPS = false;
 const updateSavedMaps = async () => {
     try {
         // Initialize API
-        const osu = await osuApi.API.createAsync(config.osu_client_id, config.osu_api_token);
+        const osu = await getOsuApiInstance();
         // Create data saving transaction function
         const insertMapset = db.prepare(`INSERT OR REPLACE INTO beatmapsets (id, status, title, artist, time_ranked) VALUES (?, ?, ?, ?, ?)`);
         const insertBeatmap = db.prepare(`INSERT OR REPLACE INTO beatmaps (id, mapset_id, mode, status, name, stars, is_convert) VALUES (?, ?, ?, ?, ?, ?, ?)`);

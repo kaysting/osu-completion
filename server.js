@@ -1,6 +1,6 @@
+require('dotenv').config();
 const express = require('express');
 const db = require('./db');
-const config = require('./config.json');
 
 const log = (...args) => {
     const timestamp = new Date().toISOString();
@@ -130,8 +130,9 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.listen(config.webserver_port, () => {
-    console.log(`Server is running on port ${config.webserver_port}`);
+const port = process.env.WEBSERVER_PORT || 8080;
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });
 
 let shuttingDown = false;

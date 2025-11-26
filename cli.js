@@ -1,16 +1,17 @@
+require('dotenv').config();
 const db = require('./db');
 const osuApi = require('osu-api-v2-js');
-const config = require('./config.json');
 
 /**
  * Parses command line arguments from process.argv into a camelCased key-value object.
- * * Supports:
+ * 
+ * Supports:
  * - --flag (Boolean true)
  * - --key=value
  * - --key value
  * - -k value (Short aliases)
  * - --long-flag-name -> longFlagName (CamelCase conversion)
- * * @returns {Object} The parsed arguments
+ * @returns {Object} The parsed arguments
  */
 function parseArgs() {
     const args = process.argv.slice(2);
@@ -97,7 +98,7 @@ const queueUser = async (userId) => {
         console.error('Please provide a user name or ID with --user when using --queue.');
         return;
     }
-    const osu = await osuApi.API.createAsync(config.osu_client_id, config.osu_api_token);
+    const osu = await osuApi.API.createAsync(process.env.OSU_CLIENT_ID, process.env.OSU_API_TOKEN);
     const user = await osu.getUser(userId);
     if (!user) {
         console.error('User not found.');
