@@ -398,7 +398,7 @@ const globalRecentCursors = {
     fruits: null,
     mania: null
 };
-const updateUsersFromGlobalRecents = async () => {
+const savePassesFromGlobalRecents = async () => {
     try {
         const osu = await osuApiInstance;
         // Loop for each game mode
@@ -449,7 +449,7 @@ const updateUsersFromGlobalRecents = async () => {
         log('Error while updating users from global recents:', error);
     }
     // Wait and check again
-    setTimeout(updateUsersFromGlobalRecents, 1000 * 15);
+    setTimeout(savePassesFromGlobalRecents, 1000 * 15);
 };
 
 // Function that starts scheduled user update tasks
@@ -546,5 +546,5 @@ const queueActiveUsers = async () => {
 log(`Starting update processes...`);
 updateSavedMaps();
 startQueuedUserUpdates();
-updateUsersFromGlobalRecents();
+savePassesFromGlobalRecents();
 queueActiveUsers();

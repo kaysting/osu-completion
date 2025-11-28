@@ -2,7 +2,7 @@ const express = require('express');
 const db = require('../db');
 
 const { ensureUserExists } = require('../middleware.js');
-const { rulesetNameToKey, rulesetKeyToName } = require('../utils.js');
+const { rulesetNameToKey, rulesetKeyToName, getRelativeTimestamp, starsToColor } = require('../utils.js');
 
 const router = express.Router();
 
@@ -41,6 +41,32 @@ router.get('/:id/:mode/:includes', ensureUserExists, (req, res) => {
         `SELECT COUNT(*) + 1 AS rank FROM user_stats
          WHERE mode = ? AND includes_loved = ? AND includes_converts = ? AND count > ?`
     ).get(modeKey, includeLoved, includeConverts, completedCount);
+    // Get recent passes
+    const recentPasses = db.prepare(
+        `SELECT up.time_passed, bs.title, bs.artist, bm.mode, bm.name, bm.stars, bs.id AS mapset_id, bm.id AS map_id
+             FROM user_passes up
+             JOIN beatmaps bm ON up.map_id = bm.id
+             JOIN beatmapsets bs ON up.mapset_id = bs.id
+             WHERE up.user_id = ?
+               AND up.mode = ?
+               AND bm.mode = up.mode
+               AND ${includeLoved ? `up.status IN ('ranked', 'approved', 'loved')` : `up.status IN ('ranked', 'approved')`}
+               ${includeConverts ? '' : 'AND up.is_convert = 0'}
+             ORDER BY up.time_passed DESC
+             LIMIT 100`
+    ).all(user.id, modeKey);
+    user.recentPasses = recentPasses.map(pass => ({
+        timeSincePass: getRelativeTimestamp(pass.time_passed),
+        title: pass.title,
+        artist: pass.artist,
+        mode: pass.mode,
+        diff: pass.name,
+        stars: pass.stars,
+        mapsetId: pass.mapset_id,
+        mapId: pass.map_id,
+        colorDiff: starsToColor(pass.stars),
+        colorText: pass.stars > 7.1 ? 'hsl(45, 95%, 70%)' : 'black'
+    }));
     // Compile user stats
     const percentage = totalMapCount > 0 ? ((completedCount / totalMapCount) * 100).toFixed(2) : '0.00';
     user.stats = {

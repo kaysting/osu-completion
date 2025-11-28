@@ -3,36 +3,36 @@
 
 @font-face {
     font-family: 'Torus';
-    src: url('/fonts/torus/Torus-Thin.otf') format('opentype');
+    src: url('/assets/fonts/torus/Torus-Thin.otf') format('opentype');
     font-weight: 100;
 }
 
 @font-face {
     font-family: 'Torus';
-    src: url('/fonts/torus/Torus-Light.otf') format('opentype');
+    src: url('/assets/fonts/torus/Torus-Light.otf') format('opentype');
     font-weight: 200;
 }
 
 @font-face {
     font-family: 'Torus';
-    src: url('/fonts/torus/Torus-Regular.otf') format('opentype');
+    src: url('/assets/fonts/torus/Torus-Regular.otf') format('opentype');
 }
 
 @font-face {
     font-family: 'Torus';
-    src: url('/fonts/torus/Torus-SemiBold.otf') format('opentype');
+    src: url('/assets/fonts/torus/Torus-SemiBold.otf') format('opentype');
     font-weight: 600;
 }
 
 @font-face {
     font-family: 'Torus';
-    src: url('/fonts/torus/Torus-Bold.otf') format('opentype');
+    src: url('/assets/fonts/torus/Torus-Bold.otf') format('opentype');
     font-weight: 700;
 }
 
 @font-face {
     font-family: 'Torus';
-    src: url('/fonts/torus/Torus-Heavy.otf') format('opentype');
+    src: url('/assets/fonts/torus/Torus-Heavy.otf') format('opentype');
     font-weight: 800;
 }
 
@@ -93,6 +93,7 @@ b {
     align-items: center;
     justify-content: center;
     gap: 8px;
+    user-select: none;
 }
 
 .btn:hover {
@@ -172,15 +173,16 @@ b {
     height: 100%;
     height: 54px;
     padding: 0px 20px;
-    background: transparent;
+    background: hsl(220, 20%, 10%);
     transition: 0.1s ease-in-out;
     border-bottom: 1px solid transparent;
     z-index: 1000;
 }
 
 #topbar.scrolled {
+    background: hsla(220, 20%, 12%, 70%);
     border-bottom: 1px solid hsl(220, 20%, 20%);
-    background: var(--bg);
+    backdrop-filter: blur(8px);
 }
 
 #topbar .container {
@@ -227,7 +229,7 @@ b {
 
 .card {
     background: hsl(220, 20%, 15%);
-    border-radius: 8px;
+    border-radius: 16px;
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
     padding: 8px;
 }
@@ -272,7 +274,7 @@ b {
 
 #statSettings {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     flex-wrap: wrap;
 }
 
@@ -283,6 +285,17 @@ b {
 
 #statSettings .section.mode {
     flex-grow: 1;
+}
+
+@media (max-width: 700px) {
+    #statSettings {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #statSettings .section.mode {
+        flex-grow: 0;
+    }
 }
 
 #leaderboard,
@@ -310,9 +323,34 @@ b {
     border-radius: 8px;
     background: hsl(220, 20%, 18%);
     overflow: hidden;
+    color: inherit;
+    user-select: none;
+    text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-#leaderboard .entry .bg {
+#leaderboard .entry .banner {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    max-width: 500px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+#leaderboard .entry .dimming {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    max-width: 500px;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background: radial-gradient(circle at top left, hsla(220, 20%, 18%, 60%), hsl(220, 20%, 18%));
+}
+
+#leaderboard .entry .bar {
     position: absolute;
     bottom: 0px;
     left: 0px;
@@ -323,11 +361,25 @@ b {
 }
 
 #leaderboard .entry .content {
+    position: relative;
     height: 50px;
     display: flex;
     padding: 2px 8px;
     align-items: center;
     gap: 16px;
+    z-index: 2;
+    transition: 0.1s ease-in-out;
+}
+
+#leaderboard .entry:hover {
+    transition: none;
+    text-decoration: none;
+    color: inherit;
+}
+
+#leaderboard .entry:hover .content {
+    background: hsla(220, 20%, 50%, 0.2);
+    transition: none;
 }
 
 #leaderboard .entry .profile,
@@ -387,11 +439,6 @@ b {
     color: white;
 }
 
-#leaderboard .entry .profile>.name:hover {
-    color: var(--accent);
-    text-decoration: underline;
-}
-
 #leaderboard .entry .stat {
     display: flex;
     flex-direction: column;
@@ -421,4 +468,232 @@ b {
     display: flex;
     align-items: center;
     color: var(--textDim);
+}
+
+#profile .card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#profile .banner {
+    width: 100%;
+    border-radius: 8px;
+}
+
+#profile .basics {
+    display: flex;
+    gap: 16px;
+    padding: 0px 32px;
+    align-items: flex-end;
+}
+
+#profile .basics>.text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 0px;
+}
+
+#profile .basics * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#profile .avatar {
+    width: 128px;
+    height: 128px;
+    margin-top: -64px;
+    border-radius: 32px;
+    border: 4px solid hsl(220, 20%, 15%);
+    background: hsl(220, 20%, 25%);
+}
+
+#profile .basics .name {
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+}
+
+#profile .stats {
+    padding: 0px 32px;
+    display: flex;
+    gap: 16px 32px;
+    flex-wrap: wrap;
+}
+
+#profile .stats .group {
+    display: flex;
+    gap: 16px 32px;
+    flex-wrap: wrap;
+    flex-shrink: 1;
+}
+
+#profile .stats .stat {
+    display: flex;
+    flex-direction: column;
+}
+
+#profile .stats .group.grow {
+    flex-grow: 1;
+}
+
+#profile .stats .stat .key {
+    color: var(--textDim);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+#profile .stats .stat .value {
+    color: white;
+    font-size: 32px;
+    font-weight: 200;
+}
+
+#profile .passes {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px 12px 12px 12px;
+}
+
+#profile .passes .entries {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+#profile .passes .entry {
+    padding: 8px;
+    border-radius: 8px;
+    display: flex;
+    gap: 8px;
+    background: hsl(220, 20%, 22%);
+    align-items: center;
+}
+
+#profile .passes .entry>.icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+#profile .passes .entry .details {
+    display: flex;
+    gap: 8px;
+    flex-grow: 1;
+    align-items: center;
+}
+
+#profile .passes .entry * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0px;
+    flex-shrink: 1;
+}
+
+#profile .passes .entry .map {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-grow: 1;
+}
+
+#profile .passes .entry .map .title {
+    font-weight: bold;
+    color: white;
+    font-size: 16px;
+}
+
+#profile .passes .entry .map .artist {
+    color: var(--textDim);
+    font-size: 12px;
+    margin-left: 2px;
+}
+
+#profile .passes .entry .map .diff {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#profile .passes .entry .map .stars {
+    width: 55px;
+    padding: 2px 0px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+#profile .passes .entry .map .stars .icon {
+    font-family: 'Material Symbols Rounded';
+    font-variation-settings: 'FILL' 1;
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 1;
+}
+
+#profile .passes .entry .map .stars .value {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+#profile .passes .entry .map .name {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#profile .passes .entry .time {
+    font-size: 14px;
+    color: var(--textDim);
+    flex-shrink: 0;
+}
+
+@media (max-width: 550px) {
+
+    #profile .basics,
+    #profile .stats {
+        padding: 0px 16px;
+    }
+
+    #profile .avatar {
+        width: 96px;
+        height: 96px;
+        margin-top: -48px;
+    }
+
+    #profile .basics .name {
+        font-size: 22px;
+    }
+
+    #profile .stats {
+        gap: 8px 16px;
+        flex-wrap: wrap;
+    }
+
+    #profile .stats .stat {
+        gap: 2px;
+    }
+
+    #profile .stats .stat .key {
+        font-size: 14px;
+    }
+
+    #profile .stats .stat .value {
+        font-size: 24px;
+    }
+
+    #profile .passes .entry .details {
+        flex-wrap: wrap;
+        gap: 2px;
+    }
+
+    #profile .passes .entry .time {
+        flex-basis: 100%;
+    }
 }

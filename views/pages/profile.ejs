@@ -1,6 +1,75 @@
 <div id="profile">
     <%- include('../partials/statSettings') %>
     <div class="card">
-        <%= user.name %>
+        <div class="top">
+            <img src="<%= user.banner_url %>" class="banner">
+            <div class="basics">
+                <img src="<%= user.avatar_url %>" class="avatar">
+                <div class="text">
+                    <div class="name"><%= user.name %></div>
+                </div>
+            </div>
+        </div>
+        <div class="stats">
+            <div class="group grow">
+                <div class="stat">
+                    <div class="key">global rank</div>
+                    <div class="value">#<%= user.stats.rank %></div>
+                </div>
+                <div class="stat">
+                    <div class="key">% completed</div>
+                    <div class="value"><%= user.stats.percentage %>%</div>
+                </div>
+                <div class="stat">
+                    <div class="key">maps completed</div>
+                    <div class="value"><%= user.stats.completed.toLocaleString() %></div>
+                </div>
+            </div>
+            <div class="group">
+                <div class="stat">
+                    <div class="key">maps to complete</div>
+                    <div class="value"><%= (user.stats.total - user.stats.completed).toLocaleString() %></div>
+                </div>
+                <div class="stat">
+                    <div class="key">total maps</div>
+                    <div class="value"><%= user.stats.total.toLocaleString() %></div>
+                </div>
+            </div>
+        </div>
+        <div class="card lighter passes">
+            <div>
+                <span class="header">recent passes</span>
+            </div>
+            <div class="entries">
+                <% for (const pass of user.recentPasses) { %>
+                <div class="entry">
+                    <!-- <img src="/assets/ruleset-icons/<%= pass.mode %>.svg" class="icon"
+                        style="background: <%= pass.colorDiff %>"> -->
+                    <div class="details">
+                        <div class="map">
+                            <div class="set">
+                                <span class="title"><%= pass.title %></span> <span class="artist">by
+                                    <%= pass.artist %></span>
+                            </div>
+                            <div class="diff">
+                                <span class="stars"
+                                    style="background: <%= pass.colorDiff %>; color: <%= pass.colorText %>">
+                                    <span class="icon">star</span><span
+                                        class="value"><%= pass.stars.toFixed(2) %></span>
+                                </span>
+                                <span class="name"
+                                    style="color: <%= pass.stars < 7.2 ? pass.colorDiff : pass.colorText %>"><%= pass.diff %></span>
+                            </div>
+                        </div>
+                        <div class="time"><%= pass.timeSincePass %></div>
+                    </div>
+                    <a href="https://osu.ppy.sh/beatmapsets/<%= pass.mapsetId %>#<%= pass.mode %>/<%= pass.mapId %>"
+                        class="btn square text" target="_blank">
+                        <div class="icon">open_in_new</div>
+                    </a>
+                </div>
+                <% } %>
+            </div>
+        </div>
     </div>
 </div>

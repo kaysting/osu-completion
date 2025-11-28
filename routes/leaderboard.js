@@ -29,7 +29,7 @@ router.get('/:mode/:includes', (req, res) => {
     }
     // Get leaderboard entries
     const entries = db.prepare(
-        `SELECT u.id, u.name, u.avatar_url, us.count FROM users u
+        `SELECT u.id, u.name, u.avatar_url, u.banner_url, us.count FROM users u
          JOIN user_stats us ON u.id = us.user_id
          WHERE us.mode = ? AND us.includes_loved = ? AND us.includes_converts = ?
          ORDER BY us.count DESC
@@ -63,6 +63,7 @@ router.get('/:mode/:includes', (req, res) => {
         id: entry.id,
         name: entry.name,
         avatar: entry.avatar_url,
+        banner: entry.banner_url,
         completed: entry.count,
         total: totalMapCount,
         percentage: totalMapCount > 0 ? ((entry.count / totalMapCount) * 100).toFixed(2) : '0.00'
