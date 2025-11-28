@@ -101,7 +101,7 @@ const utils = {
             { stars: 8, color: [0, 0, 0] }
         ];
         if (stars < 0) stars = 0;
-        if (stars > 9) stars = 9;
+        if (stars > 8) stars = 8;
         for (let i = 0; i < starGradientPoints.length - 1; i++) {
             const pointA = starGradientPoints[i];
             const pointB = starGradientPoints[i + 1];

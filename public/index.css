@@ -76,6 +76,14 @@ b {
     color: white;
 }
 
+img {
+    user-select: none;
+}
+
+::selection {
+    background: hsla(150, 90%, 70%, 50%);
+}
+
 .btn {
     --bg: hsl(220, 20%, 25%);
     --bgHover: hsl(220, 20%, 35%);

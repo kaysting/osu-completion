@@ -110,6 +110,7 @@ const updateSavedMaps = async () => {
         }
     } catch (error) {
         log('Error while updating stored beatmap data:', error);
+        await sleep(5000);
     }
     // Wait an hour and then run again
     setTimeout(updateSavedMaps, 1000 * 60 * 60);
@@ -158,6 +159,7 @@ const updateUserStats = async (userId) => {
         log('Updated user stats for', userEntry?.name || userId);
     } catch (error) {
         log('Error while updating user stats:', error);
+        await sleep(5000);
     }
 };
 
@@ -166,7 +168,7 @@ const updateUserStats = async (userId) => {
 const updateUserProfile = async (userId, userObj) => {
     try {
         const osu = await osuApiInstance;
-        const user = userObj || await osu.getUser(userId);
+        const user = userObj || (await osu.getUsers([userId]))[0];
         // Check if a user entry already exists
         const existingUser = db.prepare(`SELECT * FROM users WHERE id = ?`).get(user.id);
         if (existingUser) {
@@ -198,6 +200,7 @@ const updateUserProfile = async (userId, userObj) => {
         return user;
     } catch (error) {
         log('Error while fetching/updating user profile:', error);
+        await sleep(5000);
         return null;
     }
 };
@@ -294,6 +297,7 @@ const updateUserFromAllPasses = async (userId) => {
         await updateUserStats(userId);
     } catch (error) {
         log('Error while updating user with full pass history:', error);
+        await sleep(5000);
     } finally {
         isAllPassesUpdateRunning = false;
     }
@@ -384,6 +388,7 @@ const updateUserFromRecents = async (userId) => {
         await updateUserStats(userId);
     } catch (error) {
         log('Error while updating user recent scores:', error);
+        await sleep(5000);
     } finally {
         isRecentsUpdateRunning = false;
     }
@@ -418,7 +423,7 @@ const savePassesFromGlobalRecents = async () => {
                 if (!user) continue;
                 // Get map and diff info from db and skip if not found
                 const map = db.prepare(
-                    `SELECT diff.status
+                    `SELECT diff.status, mapset.id AS mapset_id
                  FROM beatmaps diff
                  JOIN beatmapsets mapset ON diff.mapset_id = mapset.id
                  WHERE diff.id = ? AND diff.mode = ?`
@@ -434,7 +439,7 @@ const savePassesFromGlobalRecents = async () => {
                 if (existingPass) continue;
                 // Save the pass and log
                 db.prepare(`INSERT OR IGNORE INTO user_passes (user_id, mapset_id, map_id, mode, status, is_convert, time_passed) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(
-                    user.id, map.beatmapset_id, score.beatmap_id, ruleset, map.status, map.convert ? 1 : 0, score.ended_at?.getTime() || Date.now()
+                    user.id, map.mapset_id, score.beatmap_id, ruleset, map.status, map.convert ? 1 : 0, score.ended_at?.getTime() || Date.now()
                 );
                 log(`Found and saved a new ${ruleset} map pass for ${user.name}`);
                 // Log counts
@@ -443,7 +448,7 @@ const savePassesFromGlobalRecents = async () => {
                 await updateUserStats(user.id);
             }
             // Wait a second for rate limiting
-            await sleep(1000);
+            await sleep(2000);
         }
     } catch (error) {
         log('Error while updating users from global recents:', error);
@@ -462,6 +467,9 @@ const startQueuedUserUpdates = async () => {
         const tasks = db.prepare(`SELECT * FROM user_update_tasks ORDER BY time_queued ASC`).all();
         for (const task of tasks) {
             const userEntry = db.prepare(`SELECT * FROM users WHERE id = ?`).get(task.user_id);
+            if (!userEntry) {
+                await updateUserProfile(task.user_id);
+            }
             const msSinceLastUpdate = Date.now() - (userEntry?.last_score_update || 0);
             if (msSinceLastUpdate < 1000 * 60 * 60 * 24) {
                 updateUserFromRecents(task.user_id);
@@ -471,6 +479,7 @@ const startQueuedUserUpdates = async () => {
         }
     } catch (error) {
         log('Error while initializing user update tasks:', error);
+        await sleep(5000);
     }
     setTimeout(startQueuedUserUpdates, 1000);
 };
@@ -537,6 +546,7 @@ const queueActiveUsers = async () => {
         log(`Queued ${countQueuedUsers} active users for updates and skipped ${countInactiveUsers} inactive users`);
     } catch (error) {
         log('Error while queuing active users for update:', error);
+        await sleep(5000);
     }
     // Run again in an hour
     setTimeout(queueActiveUsers, 1000 * 60 * 60);
@@ -546,5 +556,5 @@ const queueActiveUsers = async () => {
 log(`Starting update processes...`);
 updateSavedMaps();
 startQueuedUserUpdates();
-savePassesFromGlobalRecents();
+//savePassesFromGlobalRecents();
 queueActiveUsers();
