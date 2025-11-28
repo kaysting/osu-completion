@@ -5,12 +5,17 @@
         <div class="icon"><%= user.updating.percent_complete ? 'update' : 'hourglass' %></div>
         <div class="text">
             <% if (user.updating.percent_complete) { %>
-            <p><b>Scraping all beatmaps for passes</b>
+            <p><b>Checking all beatmaps for passes</b>
                 <br><%= user.updating.percent_complete.toFixed(2) %>% complete, discovered
                 <%= user.updating.count_new_passes.toLocaleString() %> new passes so far.
             </p>
+            <% } else if (!user.last_score_update) { %>
+            <p><b>Queued for import (position <%= user.updating.pos %> in line)</b>
+                <br>This profile is pending import from osu! and we'll get to it soon. Stay tuned!
+            </p>
             <% } else { %>
-            <p><b>Queued for update</b><br>This profile might be out of date and is queued for updates. Check back
+            <p><b>Queued for update (position <%= user.updating.pos %> in line)</b><br>This profile might be out of date
+                and is queued for updates. Check back
                 soon!</p>
             <% } %>
         </div>
@@ -57,6 +62,11 @@
                 <span class="header">recent passes</span>
             </div>
             <div class="entries">
+                <% if (user.recentPasses.length === 0) { %>
+                <div class="empty">
+                    <p>No recent passes found :(</p>
+                </div>
+                <% } %>
                 <% for (const pass of user.recentPasses) { %>
                 <div class="entry">
                     <!-- <img src="/assets/ruleset-icons/<%= pass.mode %>.svg" class="icon"

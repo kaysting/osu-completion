@@ -3,7 +3,7 @@ const db = require('./db');
 const middleware = {
     ensureUserExists: (req, res, next) => {
         const userId = req.params.id;
-        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+        const user = db.prepare('SELECT * FROM users WHERE id = ? OR name = ?').get(userId, userId);
         if (!user) {
             return res.status(404).render('layout', {
                 title: 'User not found',

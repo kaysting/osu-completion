@@ -72,6 +72,10 @@ router.get('/:id/:mode/:includes', ensureUserExists, (req, res) => {
         `SELECT * FROM user_update_tasks
          WHERE user_id = ?`
     ).get(user.id);
+    user.updating.pos = user.updating ? db.prepare(
+        `SELECT COUNT(*) AS pos FROM user_update_tasks
+         WHERE time_queued < ?`
+    ).get(user.updating.time_queued)?.pos + 1 : 0;
     // Compile user stats
     const percentage = totalMapCount > 0 ? ((completedCount / totalMapCount) * 100).toFixed(2) : '0.00';
     user.stats = {

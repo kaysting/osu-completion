@@ -242,11 +242,32 @@ async function main() {
     const limit = parseInt(args.limit) || 20;
     const inputUser = args.user;
     const shouldQueueUser = args.queue || false;
+    const shouldWipeUser = args.wipe || false;
     const shouldShowLeaderboard = args.leaderboard || args.lb || false;
 
     // Handle user queueing
     if (shouldQueueUser) {
         await queueUser(inputUser);
+        process.exit(0);
+    }
+
+    // Handle wiping all data for a user
+    if (shouldWipeUser) {
+        if (!inputUser) {
+            console.error('Please provide a user name or ID with --user when using --wipe.');
+            process.exit(1);
+        }
+        const user = db.prepare(`SELECT * FROM users WHERE name = ? OR id = ?`).get(inputUser, inputUser);
+        if (!user) {
+            console.error('User not found in the database.');
+            process.exit(1);
+        }
+        const userId = user.id;
+        db.prepare(`DELETE FROM user_stats WHERE user_id = ?`).run(userId);
+        db.prepare(`DELETE FROM user_passes WHERE user_id = ?`).run(userId);
+        db.prepare(`DELETE FROM user_update_tasks WHERE user_id = ?`).run(userId);
+        db.prepare(`DELETE FROM users WHERE id = ?`).run(userId);
+        console.log(`All data for user ${user.name} (ID: ${user.id}) has been wiped from the database.`);
         process.exit(0);
     }
 
