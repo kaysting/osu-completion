@@ -565,12 +565,13 @@ img {
     gap: 16px;
     padding: 8px 16px;
     align-items: center;
+    overflow: hidden;
 }
 
 #profile .basics .avatar {
     width: 96px;
     height: 96px;
-    border-radius: 32px;
+    border-radius: 24px;
     background: hsl(220, 20%, 25%);
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
 }
@@ -583,6 +584,7 @@ img {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    flex-shrink: 1;
 }
 
 #profile .basics .text .name {
@@ -612,14 +614,14 @@ img {
 
 #profile .stats .stat .key {
     color: var(--textDim);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
 }
 
 #profile .stats .stat .value {
     color: white;
-    font-size: 20px;
-    font-weight: 300;
+    font-size: 22px;
+    font-weight: 200;
 }
 
 #profile .stats .stat.big {
@@ -812,15 +814,28 @@ img {
     #profile .basics {
         padding: 8px 16px;
         flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    #profile .basics .text {
+        flex-grow: 0;
+    }
+
+    #profile .basics .avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
     }
 
     #profile .basics .name {
         font-size: 22px;
+        line-height: 1.2;
     }
 
     #profile .basics .stats {
         flex-basis: 100%;
         justify-content: center;
+        text-align: center;
     }
 
     #profile .stats .stat.big {
