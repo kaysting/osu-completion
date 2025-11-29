@@ -28,6 +28,23 @@ const updateBeatmapStats = () => {
                     db.prepare(`INSERT OR REPLACE INTO beatmap_stats (mode, includes_loved, includes_converts, count) VALUES (?, ?, ?, ?)`).run(
                         mode, includesLoved, includesConverts, count
                     );
+                    // Update yearly stats
+                    const oldestYear = 2007;
+                    for (let year = oldestYear; year <= new Date().getFullYear(); year++) {
+                        const tsStart = new Date(year, 0, 1).getTime();
+                        const tsEnd = new Date(year + 1, 0, 1).getTime();
+                        const yearlyCount = db.prepare(
+                            `SELECT COUNT(*) AS total FROM beatmaps b
+                             INNER JOIN beatmapsets s ON b.mapset_id = s.id
+                             WHERE b.mode = ?
+                             AND ${includesLoved ? `b.status IN ('ranked', 'approved', 'loved')` : `b.status IN  ('ranked', 'approved')`}
+                             ${includesConverts ? '' : 'AND b.is_convert = 0'}
+                             AND s.time_ranked >= ? AND s.time_ranked < ?`
+                        ).get(mode, tsStart, tsEnd).total;
+                        db.prepare(`INSERT OR REPLACE INTO beatmap_stats_yearly (year, mode, includes_loved, includes_converts, count) VALUES (?, ?, ?, ?, ?)`).run(
+                            year, mode, includesLoved, includesConverts, yearlyCount
+                        );
+                    }
                 }
             }
         }
@@ -131,10 +148,12 @@ const logUserPassCount = (userId) => {
 // Function to update user stats and totals in the database
 const updateUserStats = async (userId) => {
     try {
+        // Loop through modes and inclusion options
         const userEntry = db.prepare(`SELECT * FROM users WHERE id = ?`).get(userId);
         for (const mode of ['osu', 'taiko', 'fruits', 'mania']) {
             for (const includesLoved of [1, 0]) {
                 for (const includesConverts of [1, 0]) {
+                    // Build where clause
                     const where = [];
                     where.push(`user_id = ${userId}`);
                     where.push(`mode = '${mode}'`);
@@ -146,6 +165,7 @@ const updateUserStats = async (userId) => {
                     if (!includesConverts) {
                         where.push(`is_convert = 0`);
                     }
+                    // Get and save pass count
                     const count = db.prepare(
                         `SELECT COUNT(*) AS count
                                 FROM user_passes
@@ -154,6 +174,30 @@ const updateUserStats = async (userId) => {
                     db.prepare(`INSERT OR REPLACE INTO user_stats (user_id, mode, includes_loved, includes_converts, count) VALUES (?, ?, ?, ?, ?)`).run(
                         userId, mode, includesLoved, includesConverts, count
                     );
+                    // Loop through years
+                    const oldestYear = 2007;
+                    const newestYear = new Date().getFullYear();
+                    for (let year = newestYear; year >= oldestYear; year--) {
+                        const tsStart = new Date(year, 0, 1).getTime();
+                        const tsEnd = new Date(year + 1, 0, 1).getTime();
+                        // Get pass count for the year
+                        const passCount = db.prepare(
+                            `SELECT COUNT(*) AS total FROM beatmaps b
+                             INNER JOIN beatmapsets s ON b.mapset_id = s.id
+                             WHERE b.mode = ?
+                             AND ${includesLoved ? `b.status IN ('ranked', 'approved', 'loved')` : `b.status IN  ('ranked', 'approved')`}
+                             ${includesConverts ? '' : 'AND b.is_convert = 0'}
+                             AND s.time_ranked >= ? AND s.time_ranked < ?
+                             AND b.id IN (
+                                 SELECT map_id FROM user_passes 
+                                 WHERE user_id = ? 
+                             )`
+                        ).get(mode, tsStart, tsEnd, userId).total || 0;
+                        // Save yearly pass count
+                        db.prepare(`INSERT OR REPLACE INTO user_stats_yearly (user_id, mode, includes_loved, includes_converts, year, count) VALUES (?, ?, ?, ?, ?, ?)`).run(
+                            userId, mode, includesLoved, includesConverts, year, passCount
+                        );
+                    }
                 }
             }
         }
@@ -169,6 +213,8 @@ const updateUserStats = async (userId) => {
 const updateUserProfile = async (userId, userObj) => {
     try {
         const osu = await osuApiInstance;
+        const osuApiImported = require('osu-api-v2-js');
+        /** @type {osuApiImported.User.WithCountryCoverGroupsTeamStatisticsrulesets} */
         const user = userObj || (await osu.getUsers([userId]))[0];
         // Check if a user entry already exists
         const existingUser = db.prepare(`SELECT * FROM users WHERE id = ?`).get(user.id);
@@ -178,17 +224,29 @@ const updateUserProfile = async (userId, userObj) => {
                 `UPDATE users
                 SET name = ?,
                     avatar_url = ?,
-                    banner_url = ?
+                    banner_url = ?,
+                    country_code = ?,
+                    team_id = ?,
+                    team_name = ?,
+                    team_name_short = ?,
+                    team_flag_url = ?
                 WHERE id = ?`
-            ).run(user.username, user.avatar_url, user.cover.url, user.id);
+            ).run(user.username, user.avatar_url, user.cover.url, user.country.code, user.team?.id, user.team?.name, user.team?.short_name, user.team?.flag_url, user.id);
             log(`Updated stored user data for ${user.username}`);
         } else {
             // Create new user entry
             db.prepare(
-                `INSERT INTO users (id, name, avatar_url, banner_url)
-                VALUES (?, ?, ?, ?)`
-            ).run(user.id, user.username, user.avatar_url, user.cover.url);
+                `INSERT INTO users (id, name, avatar_url, banner_url, country_code, team_id, team_name, team_name_short, team_flag_url)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            ).run(user.id, user.username, user.avatar_url, user.cover.url, user.country.code, user.team?.id, user.team?.name, user.team?.short_name, user.team?.flag_url);
             log(`Stored user data for ${user.username}`);
+        }
+        // Save country info if not saved
+        const existingCountry = db.prepare(`SELECT * FROM country_names WHERE code = ?`).get(user.country.code);
+        if (!existingCountry && user.country) {
+            db.prepare(
+                `INSERT INTO country_names (code, name) VALUES (?, ?)`
+            ).run(user.country.code, user.country.name);
         }
         // Create/update user play counts
         for (const mode of ['osu', 'taiko', 'fruits', 'mania']) {
@@ -558,3 +616,5 @@ updateSavedMaps();
 startQueuedUserUpdates();
 savePassesFromGlobalRecents();
 queueActiveUsers();
+
+updateBeatmapStats();

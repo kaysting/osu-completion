@@ -59,31 +59,23 @@ router.get('/:id/:mode/:includes', ensureUserExists, (req, res) => {
     ).get(user.id, modeKey, modeKey)?.secs || 0;
     const timeToComplete = utils.secsToDuration(secs);
     // Get yearly progress
-    const oldestYear = 2007;
-    const newestYear = new Date().getFullYear();
+    const startYear = 2007;
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let y = currentYear; y >= startYear; y--) {
+        years.push(y);
+    }
     const yearly = [];
-    for (let year = newestYear; year >= oldestYear; year--) {
-        const tsStart = new Date(year, 0, 1).getTime();
-        const tsEnd = new Date(year + 1, 0, 1).getTime();
-        const commonWhere = `
-            FROM beatmaps b
-            INNER JOIN beatmapsets s ON b.mapset_id = s.id
-            WHERE b.mode = ?
-            AND ${includeLoved ? `b.status IN ('ranked', 'approved', 'loved')` : `b.status IN ('ranked', 'approved')`}
-            ${includeConverts ? '' : 'AND b.is_convert = 0'}
-            AND s.time_ranked >= ? AND s.time_ranked < ?
-        `;
+    for (const year of years) {
         const total = db.prepare(
-            `SELECT COUNT(*) AS total ${commonWhere}`
-        ).get(modeKey, tsStart, tsEnd).total || 0;
+            `SELECT count FROM beatmap_stats_yearly
+             WHERE mode = ? AND year = ? AND includes_loved = ? AND includes_converts = ?`
+        ).get(modeKey, year, includeLoved, includeConverts).count;
         if (total === 0) continue;
         const completed = db.prepare(
-            `SELECT COUNT(*) AS total ${commonWhere}
-            AND b.id IN (
-                SELECT map_id FROM user_passes 
-                WHERE user_id = ? 
-            )`
-        ).get(modeKey, tsStart, tsEnd, user.id).total || 0;
+            `SELECT count FROM user_stats_yearly
+             WHERE user_id = ? AND mode = ? AND year = ? AND includes_loved = ? AND includes_converts = ?`
+        ).get(user.id, modeKey, year, includeLoved, includeConverts)?.count || 0;
         const percentage = total > 0 ? completed / total : 0;
         yearly.push({
             year,
