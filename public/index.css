@@ -257,6 +257,7 @@ img {
 
 .card.lighter {
     background: hsl(220, 20%, 18%);
+    border-radius: 8px;
 }
 
 .card.warning {
@@ -539,7 +540,7 @@ img {
     width: 100%;
     min-height: 100px;
     aspect-ratio: 4 / 1;
-    border-radius: 8px 8px 16px 16px;
+    border-radius: 8px;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -602,7 +603,7 @@ img {
 
 #profile .stats {
     display: flex;
-    gap: 16px;
+    gap: 8px 16px;
     flex-wrap: wrap;
 }
 
@@ -657,13 +658,12 @@ img {
     gap: 8px;
     padding: 8px;
     background: hsl(220, 20%, 22%);
-    border-radius: 8px;
+    border-radius: 4px;
     align-items: center;
 }
 
 #profile .yearly .entry .year {
     font-size: 14px;
-    color: white;
     width: 40px;
     flex-shrink: 0;
     text-align: center;
@@ -685,7 +685,7 @@ img {
 
 #profile .yearly .entry .content .values .percent {
     font-size: 16px;
-    font-weight: bold;
+    font-weight: 600;
     color: white;
     flex-grow: 1;
 }
@@ -776,8 +776,7 @@ img {
 }
 
 #profile .passes .entry .map .stars {
-    width: 55px;
-    padding: 2px 0px;
+    padding: 2px 8px;
     border-radius: 16px;
     display: flex;
     align-items: center;
@@ -791,6 +790,7 @@ img {
     font-weight: 300;
     font-size: 14px;
     line-height: 1;
+    margin-left: -2px;
 }
 
 #profile .passes .entry .map .stars .value {
