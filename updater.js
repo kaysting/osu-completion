@@ -241,13 +241,6 @@ const updateUserProfile = async (userId, userObj) => {
             ).run(user.id, user.username, user.avatar_url, user.cover.url, user.country.code, user.team?.id, user.team?.name, user.team?.short_name, user.team?.flag_url);
             log(`Stored user data for ${user.username}`);
         }
-        // Save country info if not saved
-        const existingCountry = db.prepare(`SELECT * FROM country_names WHERE code = ?`).get(user.country.code);
-        if (!existingCountry && user.country) {
-            db.prepare(
-                `INSERT INTO country_names (code, name) VALUES (?, ?)`
-            ).run(user.country.code, user.country.name);
-        }
         // Create/update user play counts
         for (const mode of ['osu', 'taiko', 'fruits', 'mania']) {
             const stats = user.statistics_rulesets[mode];
